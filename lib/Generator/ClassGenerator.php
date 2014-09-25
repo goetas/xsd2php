@@ -407,7 +407,7 @@ class ClassGenerator
 
     protected function handleConstantMethods(PHPType $type, PHPConstant $const)
     {
-        $doc = "Create a new instance with " . var_export($const->getValue(), 1) . " as value.";
+        $doc = "Create a new instance with static::" . $const->getName() . " as value.";
         $doc .= PHP_EOL;
         $doc .= "@return " . $type->getName();
 
@@ -417,7 +417,7 @@ class ClassGenerator
         }
         $str .= "public static function " . strtolower($const->getName()) . "()" . PHP_EOL;
         $str .= "{" . PHP_EOL;
-        $str .= $this->indent("return new static(" . var_export($const->getValue(), 1) . ");") . PHP_EOL;
+        $str .= $this->indent("return new static(static::" . $const->getName() . ");") . PHP_EOL;
 
         $str .= "}" . PHP_EOL;
 
