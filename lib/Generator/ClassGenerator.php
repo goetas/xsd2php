@@ -436,7 +436,7 @@ class ClassGenerator
             $str .= $this->writeDocBlock($doc);
         }
         $str .= "const " . $const->getName() . " = ";
-        $str .= var_export($const->getValue(), 1);
+        $str .= var_export($const->getValue(), true);
         $str .= ";";
         return $str;
     }
