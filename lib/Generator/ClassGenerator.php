@@ -36,12 +36,12 @@ class ClassGenerator
                     {
                         return $v["value"];
                     }, $checks);
-                    $methodBody .= 'if (!in_array($value, ' . var_export($vs, 1) . ')) {' . PHP_EOL;
+                    $methodBody .= 'if (!in_array($value, ' . var_export($vs, true) . ')) {' . PHP_EOL;
                     $methodBody .= $this->indent("throw new \\InvalidArgumentException('The restriction $checkType with '" . implode(", ", $vs) . "' is not true');") . PHP_EOL;
                     $methodBody .= '}' . PHP_EOL;
                 } elseif ($checkType == "pattern") {
                     foreach ($checks as $check) {
-                        $methodBody .= 'if (!preg_match(' . var_export("/" . $check["value"] . "/", 1) . ', $value)) {' . PHP_EOL;
+                        $methodBody .= 'if (!preg_match(' . var_export("/" . $check["value"] . "/", true) . ', $value)) {' . PHP_EOL;
                         $methodBody .= $this->indent("throw new \\InvalidArgumentException('The restriction $checkType with value '" . $check["value"] . "' is not true');") . PHP_EOL;
                         $methodBody .= '}' . PHP_EOL;
                     }
