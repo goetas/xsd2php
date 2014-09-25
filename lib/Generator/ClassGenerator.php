@@ -256,7 +256,7 @@ class ClassGenerator
         if ($type && $type instanceof PHPClassOf) {
             $methodBody .= "foreach ($" . $prop->getName() . " as \$item) {" . PHP_EOL;
             $methodBody .= $this->indent("if (!(\$item instanceof " . $this->getPhpType($type->getArg()->getType()) . ") ) {") . PHP_EOL;
-            $methodBody .= $this->indent("throw new \InvalidArgumentException('Argument 1 passed to ' . __METHOD__ . ' be an array of " . $this->getPhpType($type->getArg()->getType()) . "');", 2) .
+            $methodBody .= $this->indent("throw new \\InvalidArgumentException('Argument 1 passed to ' . __METHOD__ . ' be an array of " . $this->getPhpType($type->getArg()->getType()) . "');", 2) .
             PHP_EOL;
             $methodBody .= $this->indent("}") . PHP_EOL;
             $methodBody .= "}" . PHP_EOL;
@@ -411,6 +411,7 @@ class ClassGenerator
         $doc .= PHP_EOL;
         $doc .= "@return " . $type->getName();
 
+        $str = '';
         if ($doc) {
             $str .= $this->writeDocBlock($doc);
         }
