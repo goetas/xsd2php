@@ -277,7 +277,26 @@ class Xsd2PhpConverter extends AbstractXsd2Converter
                 $this->handleClassExtension($class, $parent);
             }
 
+            foreach ($restriction->getChecksByType('enumeration') as $check) {
+                $const = new PHPConstant();
+                $const->setName(strtoupper(Inflector::tableize($check['value'])));
+                $const->setValue($check['value']);
+                if (isset($check['doc'])) {
+                    $const->setDoc($check['doc']);
+                }
+
+                $class->addConstants($const);
+
+                $check['constant'] = $const;
+                $class->addCheck('__value', 'enumeration', $check);
+            }
+
             foreach ($restriction->getChecks() as $typeCheck => $checks) {
+                // We just handled enumerations above
+                if ($typeCheck === 'enumeration') {
+                    continue;
+                }
+
                 foreach ($checks as $check) {
                     $class->addCheck('__value', $typeCheck, $check);
                 }
