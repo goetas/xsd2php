@@ -6,16 +6,15 @@ trait PHPObject
 
     protected $checks = array();
 
+    /**
+     * @var PHPConstant[]
+     */
     protected $constants = array();
 
     protected $properties = array();
 
     protected $traits = array();
 
-    /**
-     * @var PHPClass
-     */
-    protected $extends = null;
 
     public function getProperties()
     {
@@ -34,7 +33,6 @@ trait PHPObject
     }
 
     /**
-     *
      * @param string $name
      * @return boolean
      */
@@ -44,9 +42,8 @@ trait PHPObject
     }
 
     /**
-     *
      * @param string $name
-     * @return boolean
+     * @return bool
      */
     public function hasPropertyInHierarchy($name)
     {
@@ -65,7 +62,6 @@ trait PHPObject
     }
 
     /**
-     *
      * @param string $name
      * @return PHPProperty
      */
@@ -86,7 +82,6 @@ trait PHPObject
     }
 
     /**
-     *
      * @param string $name
      * @return PHPProperty
      */
@@ -112,17 +107,6 @@ trait PHPObject
         return $this->constants;
     }
 
-    public function getExtends()
-    {
-        return $this->extends;
-    }
-
-    public function setExtends(PHPClass $extends)
-    {
-        $this->extends = $extends;
-        return $this;
-    }
-
     public function getTraits()
     {
         return $this->traits;
@@ -131,17 +115,6 @@ trait PHPObject
     public function addTrait(PHPTrait $trait)
     {
         $this->traits[] = $trait;
-        return $this;
-    }
-
-    public function getInterfaces()
-    {
-        return $this->interfaces;
-    }
-
-    public function setInterfaces($interfaces)
-    {
-        $this->interfaces = $interfaces;
         return $this;
     }
 
