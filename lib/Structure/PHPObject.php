@@ -12,6 +12,11 @@ trait PHPObject
 
     protected $traits = array();
 
+    /**
+     * @var PHPClass
+     */
+    protected $extends = null;
+
     public function getProperties()
     {
         return $this->properties;
