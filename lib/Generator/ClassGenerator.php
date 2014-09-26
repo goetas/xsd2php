@@ -32,11 +32,15 @@ class ClassGenerator
 
             foreach ($type->getChecks('__value') as $checkType => $checks) {
                 if ($checkType == "enumeration") {
+
                     $vs = array_map(function ($v)
                     {
-                        return $v["value"];
+                        /** @var PHPConstant $const */
+                        $const = $v['constant'];
+                        return 'static::'.$const->getName();
                     }, $checks);
-                    $methodBody .= 'if (!in_array($value, ' . var_export($vs, true) . ')) {' . PHP_EOL;
+
+                    $methodBody .= 'if (!in_array($value, array(' . implode(', ', $vs) . '))) {' . PHP_EOL;
                     $methodBody .= $this->indent("throw new \\InvalidArgumentException('The restriction $checkType with \\'" . implode(", ", $vs) . "\\' is not true');") . PHP_EOL;
                     $methodBody .= '}' . PHP_EOL;
                 } elseif ($checkType == "pattern") {
