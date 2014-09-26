@@ -19,6 +19,7 @@ class ClassGenerator
     protected function handleChecks(PHPType $type)
     {
         $str = '';
+        $strVal = '';
 
         if (($type instanceof PHPClass) && ($type->getChecks('__value') || $type->hasProperty('__value'))) {
 
@@ -33,12 +34,21 @@ class ClassGenerator
 
             foreach ($type->getChecks('__value') as $checkType => $checks) {
                 if ($checkType == "enumeration") {
-                    $vs = array_map(function ($v)
-                    {
-                        return $v["value"];
+
+                    $vs = array_map(function($check){
+                        /** @var PHPConstant $const */
+                        $const = $check['constant'];
+                        return 'static::'.$const->getName();
                     }, $checks);
-                    $methodBody .= 'if (!in_array($value, ' . var_export($vs, 1) . ')) {' . PHP_EOL;
-                    $methodBody .= $this->indent("throw new \\InvalidArgumentException('The restriction $checkType with \\'" . implode(", ", $vs) . "\\' is not true');") . PHP_EOL;
+
+                    $strVal .= 'public static function values()'.PHP_EOL;
+                    $strVal .= '{'.PHP_EOL;
+                    $strVal .= $this->indent('return array('.implode(', ', $vs).');').PHP_EOL;
+                    $strVal .= '}'.PHP_EOL;
+
+                    $methodBody .= 'if (!in_array($value, static::values())) {' . PHP_EOL;
+                    $methodBody .= $this->indent('$values = implode(\', \', static::values());') . PHP_EOL;
+                    $methodBody .= $this->indent("throw new \\InvalidArgumentException(\"The restriction $checkType with '\$values' is not true\");") . PHP_EOL;
                     $methodBody .= '}' . PHP_EOL;
                 } elseif ($checkType == "pattern") {
                     foreach ($checks as $check) {
@@ -68,7 +78,7 @@ class ClassGenerator
             $str .= PHP_EOL;
         }
 
-        return $str;
+        return $str.PHP_EOL.$strVal;
     }
 
     protected function handleBody(PHPType $type)
@@ -87,9 +97,6 @@ class ClassGenerator
 
             foreach ($type->getProperties() as $prop) {
                 $str .= $this->handleProperty($prop) . PHP_EOL . PHP_EOL;
-            }
-            foreach ($type->getConstants() as $const) {
-                $str .= $this->handleConstantMethods($type, $const) . PHP_EOL . PHP_EOL;
             }
 
             $str .= $this->handleChecks($type);
@@ -405,21 +412,18 @@ class ClassGenerator
         return '';
     }
 
-    protected function handleConstantMethods(PHPType $type, PHPConstant $const)
+    /**
+     * @param PHPConstant[] $constants
+     * @return string
+     */
+    protected function handleConstantValueMethod($constants)
     {
-        $doc = "Create a new instance with " . var_export($const->getValue(), 1) . " as value.";
-        $doc .= PHP_EOL;
-        $doc .= "@return " . $type->getName();
-
         $str = '';
-        if ($doc) {
-            $str .= $this->writeDocBlock($doc);
-        }
-        $str .= "public static function " . strtolower($const->getName()) . "()" . PHP_EOL;
-        $str .= "{" . PHP_EOL;
-        $str .= $this->indent("return new static(" . var_export($const->getValue(), 1) . ");") . PHP_EOL;
 
-        $str .= "}" . PHP_EOL;
+        $str .= 'public static function values()'.PHP_EOL;
+        $str .= '{';
+        $str .= $this->indent(sprintf('return array(%s);', $values));
+        $str .= '}';
 
         return $str;
     }
