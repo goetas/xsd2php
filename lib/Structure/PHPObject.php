@@ -11,25 +11,43 @@ trait PHPObject
      */
     protected $constants = array();
 
+    /**
+     * @var PHPProperty[]
+     */
     protected $properties = array();
 
+    /**
+     * @var PHPTrait[]
+     */
     protected $traits = array();
 
-
-    public function getProperties()
-    {
-        return $this->properties;
-    }
-
+    /**
+     * @param $property
+     * @return array
+     */
     public function getChecks($property)
     {
         return isset($this->checks[$property]) ? $this->checks[$property] : array();
     }
 
+    /**
+     * @param $property
+     * @param $check
+     * @param $value
+     * @return $this
+     */
     public function addCheck($property, $check, $value)
     {
         $this->checks[$property][$check][] = $value;
         return $this;
+    }
+
+    /**
+     * @return PHPProperty[]
+     */
+    public function getProperties()
+    {
+        return $this->properties;
     }
 
     /**
@@ -90,34 +108,55 @@ trait PHPObject
         return $this->properties[$name];
     }
 
+    /**
+     * @param PHPProperty $property
+     * @return $this
+     */
     public function addProperty(PHPProperty $property)
     {
         $this->properties[$property->getName()] = $property;
         return $this;
     }
 
+    /**
+     * @param PHPConstant $const
+     * @return $this
+     */
     public function addConstants(PHPConstant $const)
     {
         $this->constants[] = $const;
         return $this;
     }
 
+    /**
+     * @return PHPConstant[]
+     */
     public function getConstants()
     {
         return $this->constants;
     }
 
+    /**
+     * @return PHPTrait[]
+     */
     public function getTraits()
     {
         return $this->traits;
     }
 
+    /**
+     * @param PHPTrait $trait
+     * @return $this
+     */
     public function addTrait(PHPTrait $trait)
     {
         $this->traits[] = $trait;
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return "class " . $this->getFullName();
