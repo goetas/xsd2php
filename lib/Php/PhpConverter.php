@@ -39,6 +39,10 @@ class PhpConverter extends AbstractConverter
         {
             return "DateTime";
         });
+        $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "date", function (Type $type)
+        {
+            return "DateTime";
+        });
     }
     public function getTypeAlias($type, Schema $schemapos = null)
     {
@@ -92,7 +96,7 @@ class PhpConverter extends AbstractConverter
             $this->visitType($type);
         }
         foreach ($schema->getElements() as $element) {
-            $this->visitElementDef($schema, $element);
+            $this->visitElementDef($element);
         }
 
         foreach ($schema->getSchemas() as $schildSchema) {
@@ -141,30 +145,30 @@ class PhpConverter extends AbstractConverter
         }
     }
 
-    private function visitElementDef(Schema $schema, ElementDef $element)
+    private function visitElementDef(ElementDef $element)
     {
-        $class = new PHPClass();
-        $class->setDoc($element->getDoc());
-        $class->setName(Inflector::classify($element->getName()));
-        $class->setDoc($element->getDoc());
+        if (! isset($this->classes[spl_object_hash($element)])) {
+            $schema = $element->getSchema();
 
-        if (! isset($this->namespaces[$schema->getTargetNamespace()])) {
-            throw new Exception(sprintf("Can't find a PHP equivalent namespace for %s namespace", $schema->getTargetNamespace()));
+            $class = new PHPClass();
+            $class->setDoc($element->getDoc());
+            $class->setName(Inflector::classify($element->getName()));
+            $class->setDoc($element->getDoc());
+
+            if (! isset($this->namespaces[$schema->getTargetNamespace()])) {
+                throw new Exception(sprintf("Can't find a PHP equivalent namespace for %s namespace", $schema->getTargetNamespace()));
+            }
+            $class->setNamespace($this->namespaces[$schema->getTargetNamespace()]);
+
+            $this->classes[spl_object_hash($element)]["class"] = $class;
+
+            if (! $element->getType()->getName()) {
+                $this->visitTypeBase($class, $element->getType());
+            } else {
+                $this->handleClassExtension($class, $element->getType());
+            }
         }
-        $class->setNamespace($this->namespaces[$schema->getTargetNamespace()]);
-
-        if (isset($this->classes[$class->getFullName()])) {
-            return $this->classes[$class->getFullName()]["class"];
-        }
-        $this->classes[$class->getFullName()]["class"] = $class;
-
-        if (! $element->getType()->getName()) {
-            $this->visitTypeBase($class, $element->getType());
-        } else {
-            $this->handleClassExtension($class, $element->getType());
-        }
-
-        return $class;
+        return $this->classes[spl_object_hash($element)]["class"];
     }
 
     private function findPHPName(Type $type)
@@ -209,11 +213,6 @@ class PhpConverter extends AbstractConverter
      */
     private function visitType(Type $type, $force = false)
     {
-        /*
-        var_dump($type->getName());
-        var_dump($force);
-        echo "\n\n";
-        */
         if (! isset($this->classes[spl_object_hash($type)])) {
 
             $this->classes[spl_object_hash($type)]["class"] = $class = new PHPClass();
@@ -236,7 +235,7 @@ class PhpConverter extends AbstractConverter
                 $this->classes[spl_object_hash($type)]["skip"] = true;
                 return $class;
             }
-            if ($this->isArray($type) && !$force) {
+            if (($this->isArrayType($type) || $this->isArrayNestedElement($type)) && !$force) {
                 $this->classes[spl_object_hash($type)]["skip"] = true;
                 return $class;
             }
@@ -358,17 +357,16 @@ class PhpConverter extends AbstractConverter
         $property = new PHPProperty();
         $property->setName(Inflector::camelize($attribute->getName()));
 
-        if ($arrayize && $itemOfArray = $this->isArray($attribute->getType())) {
+        if ($arrayize && $itemOfArray = $this->isArrayType($attribute->getType())) {
             if ($attribute->getType()->getName()) {
                 $arg = new PHPArg($attribute->getName());
-
                 $arg->setType($this->visitType($itemOfArray));
                 $property->setType(new PHPClassOf($arg));
             } else {
                 $property->setType($this->visitTypeAnonymous($attribute->getType(), $attribute->getName(), $class));
             }
         } else {
-            $property->setType($this->findPHPClass($class, $schema, $attribute, true));
+            $property->setType($this->findPHPClass($class, $attribute, true));
         }
 
         $property->setDoc($attribute->getDoc());
@@ -387,45 +385,51 @@ class PhpConverter extends AbstractConverter
     {
         $property = new PHPProperty();
         $property->setName(Inflector::camelize($element->getName()));
+        $property->setDoc($element->getDoc());
 
-        if ($arrayize && ($t = $element->getType()) && ($itemOfArray = $this->isArray($t))) {
+        $t = $element->getType();
 
-            if($itemOfArray instanceof Type){
+        if ($arrayize) {
+            if ($itemOfArray = $this->isArrayType($t)) {
                 if(!$itemOfArray->getName()){
                     $classType = $this->visitTypeAnonymous($itemOfArray, $element->getName(), $class);
                 }else{
                     $classType = $this->visitType($itemOfArray);
                 }
-                $elementProp = new PHPProperty();
-                $elementProp->setName(Inflector::camelize($element->getName()));
-                $elementProp->setType($classType);
-            }else{
+
+                $arg = new PHPArg(Inflector::camelize($element->getName()));
+                $arg->setType($classType);
+                $property->setType(new PHPClassOf($arg));
+                return $property;
+            }elseif ($itemOfArray = $this->isArrayNestedElement($t)) {
                 if(!$t->getName()){
                     $classType = $this->visitTypeAnonymous($t, $element->getName(), $class);
                 }else{
                     $classType = $this->visitType($t);
                 }
                 $elementProp = $this->visitElement($classType, $schema, $itemOfArray, false);
-            }
-            $property->setType(new PHPClassOf($elementProp));
-        } else {
-            if ($arrayize && $element instanceof ElementItem && ($element->getMax() > 1 || $element->getMax() === - 1)) {
-                $arg = new PHPArg();
-                $arg->setType($this->findPHPClass($class, $schema, $element));
+                $property->setType(new PHPClassOf($elementProp));
+                return $property;
+            } elseif ($this->isArrayElement($element)) {
+                $arg = new PHPArg($element->getName());
+                $arg->setType($this->findPHPClass($class, $element));
                 $arg->setDefault('array()');
-                $arg->setName($element->getName());
                 $property->setType(new PHPClassOf($arg));
-            } else {
-                $property->setType($this->findPHPClass($class, $schema, $element, true));
+                return $property;
             }
-            $property->setDoc($element->getDoc());
         }
 
+        $property->setType($this->findPHPClass($class, $element, true));
         return $property;
     }
 
-    private function findPHPClass(PHPClass $class, Schema $schema, Item $node, $force = false)
+    private function findPHPClass(PHPClass $class, Item $node, $force = false)
     {
+
+        if ($node instanceof ElementRef) {
+            return $this->visitElementDef($node->getReferencedElement());
+        }
+
         if (! $node->getType()->getName()) {
             return $this->visitTypeAnonymous($node->getType(), $node->getName(), $class);
         } else {

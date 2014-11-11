@@ -289,7 +289,6 @@ class ClassGenerator
             $e = $type->getExtends();
             if ($e) {
                 if ($e->hasProperty('__value')) {
-                    var_dump(count($e->getPropertiesInHierarchy()));
                     return $e->getProperty('__value');
                 }
             }
@@ -373,7 +372,7 @@ class ClassGenerator
             return;
         }
 
-        $docblock = new DocBlockGenerator("Constant for " . var_export($enumeration['value'], 1) . " value.");
+        $docblock = new DocBlockGenerator("Constant for " . var_export($enumeration['value'], true) . " value.");
 
         if (trim($enumeration['doc'])) {
             $docblock->setLongDescription(trim($enumeration['doc']));
