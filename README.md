@@ -49,7 +49,7 @@ Generate PHP classes
 --------------------
 
 ```sh
-bin/xsd2php.php convert:php \
+vendor/bin/xsd2php convert:php \
 `/home/my/ota/OTA_HotelAvail*.xsd \
 
 --ns-map='http://www.opentravel.org/OTA/2003/05;Mercurio/OTA/2007B/' \
@@ -77,7 +77,7 @@ Serialize / Unserialize
 XSD2PHP can also generate for you [JMS Serializer](http://jmsyst.com/libs/serializer) metadata that you can use to serialize/unserialize the generated PHP class instances.
 
 ```sh
-bin/xsd2php.php  convert:jms-yaml \
+vendor/bin/xsd2php  convert:jms-yaml \
 `/home/my/ota/OTA_HotelAvail*.xsd \
 
 --ns-map='http://www.opentravel.org/OTA/2003/05;Mercurio/OTA/2007B/'  \
