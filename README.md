@@ -71,6 +71,16 @@ What about custom types?
 will instcut XSD2PHP to do not generate any class for `CustomOTADateTimeFormat` type inside `http://www.opentravel.org/OTA/2003/05` namespace.
 All reference to this type are replaced with the `Vendor/Project/CustomDateClass` class.
 
+
+### Use composer scripts to generate classes
+```js
+  "scripts": {
+    "build": "xsd2php convert:php '/home/my/ota/OTA_HotelAvail*.xsd' --ns-map='http://www.opentravel.org/OTA/2003/05;Mercurio/OTA/2007B/' --ns-dest='Mercurio/OTA/2007B/;src/Mercurio/OTA/V2007B'"
+  }
+```
+
+Now you can build your classes with `composer build`.
+
 Serialize / Unserialize
 -----------------------
 
