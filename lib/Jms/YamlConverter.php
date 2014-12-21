@@ -3,6 +3,7 @@ namespace Goetas\Xsd\XsdToPhp\Jms;
 
 use Exception;
 use Goetas\XML\XSDReader\Schema\Schema;
+use Goetas\XML\XSDReader\Schema\Type\ComplexTypeSimpleContent;
 use Goetas\XML\XSDReader\Schema\Type\Type;
 use Doctrine\Common\Inflector\Inflector;
 use Goetas\XML\XSDReader\Schema\Type\BaseComplexType;
@@ -331,6 +332,9 @@ class YamlConverter extends AbstractConverter
                     $data["properties"]["__value"] = $property;
 
                 }
+                elseif ($type instanceof ComplexTypeSimpleContent && count($extension) == 1) {
+                    $this->visitTypeBase($extension, $data, $type, $parentName);
+                }
             }
         }
     }
@@ -478,7 +482,16 @@ class YamlConverter extends AbstractConverter
         }
 
         if ($node instanceof ElementRef) {
-            return key($this->visitElementDef($node->getSchema(), $node->getReferencedElement()));
+            $referencedElement = $node->getReferencedElement();
+            $referencedElementType = $referencedElement->getType();
+            $type = key($this->visitElementDef($node->getSchema(), $referencedElement));
+            if ($referencedElementType instanceof SimpleType)  {
+                $type = $this->findPHPClass($type, $referencedElement);
+            }
+            elseif ($referencedElementType instanceof ComplexTypeSimpleContent)  {
+                $type = $this->findPHPClass($type, $referencedElement);
+            }
+            return $type;
         }
         if($valueProp = $this->typeHasValue($type, $class, 'xx')){
             return $valueProp;
