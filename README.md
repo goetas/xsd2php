@@ -68,7 +68,7 @@ Where place the files?
 
 What about custom types?
 * `--alias-map='http://www.opentravel.org/OTA/2003/05;CustomOTADateTimeFormat;Vendor/Project/CustomDateClass'`
-will instcut XSD2PHP to do not generate any class for `CustomOTADateTimeFormat` type inside `http://www.opentravel.org/OTA/2003/05` namespace.
+will instruct XSD2PHP to do not generate any class for `CustomOTADateTimeFormat` type inside `http://www.opentravel.org/OTA/2003/05` namespace.
 All reference to this type are replaced with the `Vendor/Project/CustomDateClass` class.
 
 
@@ -151,7 +151,7 @@ bin/xsd2php.php convert:jms-yaml \
  ... various params ... \
 
 --alias-map='http://www.w3.org/2001/XMLSchema;anyType;MyCustomAnyTypeHandler' \
---alias-map='http://www.w3.org/2001/XMLSchema;anyType;MyCustomAnySimpleTypeHandler' \
+--alias-map='http://www.w3.org/2001/XMLSchema;anySimpleType;MyCustomAnySimpleTypeHandler' \
 
 ```
 
@@ -201,14 +201,14 @@ class MyHandler implements SubscribingHandlerInterface
 Naming Strategy
 ---------------
 
-Sometimes happen that you want not to have long class names but at the same time you want not too have namaing conflicts.
+It might happen that you do not want to have long class names, but at the same time you want to prevent any name conflicts as well.
 (example: `MyNamesapce\UserElement` instead of `MyNamesapce\User` or  `MyNamesapce\UserTypeType` instead of `MyNamesapce\UserType`).
 
 When you have an XSD with a type named `User`, a type named `UserType` and a root element named `User` and `UserElement`,
-creating the right PHP classes names will be problemeatic. To solve this you have to choose the right naming strategy.
+creating the right PHP classes names will be problematic. To solve this you have to choose the right naming strategy.
 
-* If you don't not have naming conflicts and you want to have short and descriptive class names, use `--naming-strategy=short` option when you generate classes and metadata
-* If you have naming conflicts (or just you want to be stay safe) use `--naming-strategy=long` option when you generate classes and metadata.
+* If you don not have naming conflicts and you want to have short and descriptive class names, use the `--naming-strategy=short` option when you generate classes and metadata
+* If you have naming conflicts (or just you want to be stay safe) use the `--naming-strategy=long` option when you generate classes and metadata.
 This will generate PHP classes with the `Element` or `Type` suffix.
 
 
