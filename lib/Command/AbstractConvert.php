@@ -103,6 +103,10 @@ abstract class AbstractConvert extends Console\Command\Command
             $output->writeln("Reading <comment>$file</comment>");
 
             $xml = new \DOMDocument('1.0', 'UTF-8');
+            /* Enables recovery mode, i.e. trying to parse non-well formed documents.
+            This attribute is not part of the DOM specification and is specific to libxml.*/
+            $xml->recover = true;
+            
             if (! $xml->load($file)) {
                 throw new \Exception("Can't load the schema '{$file}'");
             }
