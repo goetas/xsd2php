@@ -8,6 +8,7 @@ use Symfony\Component\Console;
 use Goetas\XML\XSDReader\SchemaReader;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Goetas\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\LongNamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
@@ -117,10 +118,10 @@ abstract class AbstractConvert extends Console\Command\Command
             $schemas[spl_object_hash($schema)] = $schema;
         }
 
-        $this->convert($converter, $schemas, $targets, $output);
+        $this->convert($converter, $schemas, $targets, $input, $output);
 
         return 0;
     }
 
-    protected abstract function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output);
+    protected abstract function convert(AbstractConverter $converter, array $schemas, array $targets, InputInterface $input, OutputInterface $output);
 }

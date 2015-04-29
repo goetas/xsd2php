@@ -12,14 +12,18 @@ class PHPConversionTest extends \PHPUnit_Framework_TestCase
     /**
      *
      * @param mixed $xml
+     * @param string $addPrefix
+     *
      * @return \Zend\Code\Generator\ClassGenerator[]
      */
-    protected function getClasses($xml)
+    protected function getClasses($xml, $addPrefix = 'addTo')
     {
         $phpcreator = new PhpConverter(new ShortNamingStrategy());
         $phpcreator->addNamespace('http://www.example.com', 'Example');
 
         $generator = new ClassGenerator();
+        $generator->setAddPrefix($addPrefix);
+
         $reader = new SchemaReader();
 
         if (! is_array($xml)) {
@@ -243,5 +247,36 @@ class PHPConversionTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($single->hasMethod('getId'));
         $this->assertTrue($single->hasMethod('setId'));
+    }
+
+    public function testAddPrefix()
+    {
+        $xml = '
+            <xs:schema targetNamespace="http://www.example.com"
+            xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+                <xs:complexType name="ArrayOfStrings">
+                    <xs:all>
+                        <xs:element name="string" type="xs:string" maxOccurs="unbounded"/>
+                    </xs:all>
+                </xs:complexType>
+
+                <xs:complexType name="Single">
+                    <xs:all>
+                        <xs:element name="a" type="ArrayOfStrings"/>
+                        <xs:element name="b" type="ArrayOfStrings"/>
+                    </xs:all>
+                </xs:complexType>
+
+            </xs:schema>';
+
+        $items = $this->getClasses($xml, 'add');
+
+        $this->assertCount(1, $items);
+
+        $single = $items['Example\SingleType'];
+        $this->assertTrue($single->hasMethod('addA'));
+        $this->assertTrue($single->hasMethod('addB'));
+
     }
 }

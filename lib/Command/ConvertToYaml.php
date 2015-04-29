@@ -5,6 +5,7 @@ use Goetas\Xsd\XsdToPhp\Jms\PathGenerator\Psr4PathGenerator;
 use Goetas\Xsd\XsdToPhp\Jms\YamlConverter;
 use Symfony\Component\Yaml\Dumper;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 
@@ -27,7 +28,7 @@ class ConvertToYaml extends AbstractConvert
         return new YamlConverter($naming);
     }
 
-    protected function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output)
+    protected function convert(AbstractConverter $converter, array $schemas, array $targets, InputInterface $input, OutputInterface $output)
     {
         $items = $converter->convert($schemas);
 

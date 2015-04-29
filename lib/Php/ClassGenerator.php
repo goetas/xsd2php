@@ -16,6 +16,26 @@ use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
 
 class ClassGenerator
 {
+    /**
+     * @var string $addPrefix
+     */
+    private $addPrefix = 'addTo';
+
+    /**
+     * @return string
+     */
+    public function getAddPrefix()
+    {
+        return $this->addPrefix;
+    }
+
+    /**
+     * @param string $addPrefix
+     */
+    public function setAddPrefix($addPrefix)
+    {
+        $this->addPrefix = $addPrefix;
+    }
 
     private function handleBody(Generator\ClassGenerator $class, PHPClass $type)
     {
@@ -308,7 +328,7 @@ class ClassGenerator
             ->getType()));
         $docblock->setTag($patramTag);
 
-        $method = new MethodGenerator("addTo".Inflector::classify($prop->getName()));
+        $method = new MethodGenerator($this->getAddPrefix().Inflector::classify($prop->getName()));
 
         $parameter = new ParameterGenerator($propName);
         $tt = $type->getArg()->getType();
