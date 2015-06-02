@@ -175,7 +175,7 @@ class ClassGenerator {
 
 		$method = new MethodGenerator( "set" . Inflector::classify( $prop->getName() ) );
 
-		$parameter = new ParameterGenerator( $prop->getName(), "mixed" );
+		$parameter = new ParameterGenerator( $prop->getName(), "mixed", new Generator\ValueGenerator(null, Generator\ValueGenerator::TYPE_NULL) );
 
 		if ( $type && $type instanceof PHPClassOf ) {
 			$patramTag->setTypes(
