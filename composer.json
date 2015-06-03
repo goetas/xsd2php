@@ -44,6 +44,7 @@
             "Goetas\\Xsd\\XsdToPhp\\Tests\\":"tests/"
         }
     },
+    "bin": ["bin/xsd2php.php"],
     "extra":{
         "branch-alias":{
             "dev-master":"2.0-dev"
