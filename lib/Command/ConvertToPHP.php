@@ -11,20 +11,18 @@ use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Zend\Code\Generator\FileGenerator;
 
 class ConvertToPHP extends AbstractConvert
 {
-    /**
-     *
-     * @see Console\Command\Command
-     */
     protected function configure()
     {
         parent::configure();
         $this->setName('convert:php');
         $this->setDescription('Convert XSD definitions into PHP classes');
+        $this->addOption('docblock-nowordwrap', null, InputOption::VALUE_NONE);
     }
 
     /**
