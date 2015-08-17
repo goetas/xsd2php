@@ -1,7 +1,6 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Command;
 
-use Goetas\XML\XSDReader\Schema\Item;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 use Goetas\Xsd\XsdToPhp\PathGenerator\PathGeneratorException;
@@ -11,18 +10,40 @@ use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
 
 class ConvertToPHP extends AbstractConvert
 {
+    /**
+     * @var bool
+     */
+    private $docBlockNoWordWrap = false;
+
     protected function configure()
     {
         parent::configure();
         $this->setName('convert:php');
         $this->setDescription('Convert XSD definitions into PHP classes');
         $this->addOption('docblock-nowordwrap', null, InputOption::VALUE_NONE);
+    }
+
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws \Exception
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        if ($input->getOption('docblock-nowordwrap')) {
+            $this->docBlockNoWordWrap = true;
+        }
+
+        return parent::execute($input, $output);
     }
 
     /**
@@ -45,6 +66,13 @@ class ConvertToPHP extends AbstractConvert
     protected function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output)
     {
         $generator = new ClassGenerator();
+
+        if ($this->docBlockNoWordWrap) {
+            $docBlock = new DocBlockGenerator();
+            $docBlock->setWordWrap(false);
+            $generator->setDocBlockGeneratorPrototype($docBlock);
+        }
+
         $pathGenerator = new Psr4PathGenerator($targets);
 
         /** @var ProgressHelper $progress */
