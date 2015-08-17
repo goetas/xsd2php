@@ -1,18 +1,21 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Command;
 
+use Goetas\XML\XSDReader\Schema\Item;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Goetas\Xsd\XsdToPhp\PathGenerator\PathGeneratorException;
 use Goetas\Xsd\XsdToPhp\Php\ClassGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
+use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 use Zend\Code\Generator\FileGenerator;
 
 class ConvertToPHP extends AbstractConvert
 {
-
     /**
      *
      * @see Console\Command\Command
@@ -38,7 +41,8 @@ class ConvertToPHP extends AbstractConvert
      * @param array $schemas
      * @param array $targets
      * @param OutputInterface $output
-     * @throws \Goetas\Xsd\XsdToPhp\PathGenerator\PathGeneratorException
+     * @return mixed|void
+     * @throws PathGeneratorException
      */
     protected function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output)
     {
@@ -51,9 +55,10 @@ class ConvertToPHP extends AbstractConvert
         $items = $converter->convert($schemas);
         $progress->start($output, count($items));
 
+        /** @var PHPClass $item */
         foreach ($items as $item) {
             $progress->advance(1, true);
-            $output->write(" Creating <info>" . $output->getFormatter()->escape($item->getFullName()) . "</info>... ");
+            $output->write(" Creating <info>" . OutputFormatter::escape($item->getFullName()) . "</info>... ");
             $path = $pathGenerator->getPath($item);
 
             $fileGen = new FileGenerator();
