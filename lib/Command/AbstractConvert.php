@@ -73,7 +73,7 @@ abstract class AbstractConvert extends Command
             list ($xmlNs, $phpNs) = explode(";", $val, 2);
             $nsMapKeyed[$xmlNs] = $phpNs;
             $converter->addNamespace($xmlNs, trim(strtr($phpNs, "./", "\\\\"), "\\"));
-            $output->writeln("\tXML namepsace: <comment>$xmlNs</comment> => PHP namepsace: <info>$phpNs</info>");
+            $output->writeln("\tXML namespace: <comment>$xmlNs</comment> => PHP namespace: <info>$phpNs</info>");
         }
         $targets = array();
         $output->writeln("Target directories:");
@@ -85,7 +85,7 @@ abstract class AbstractConvert extends Command
             $phpNs = strtr($phpNs, "./", "\\\\");
 
             $targets[$phpNs] = $dir;
-            $output->writeln("\tPHP namepsace: <comment>" . strtr($phpNs, "\\", "/") . "</comment> => Destination directory: <info>$dir</info>");
+            $output->writeln("\tPHP namespace: <comment>" . strtr($phpNs, "\\", "/") . "</comment> => Destination directory: <info>$dir</info>");
         }
         $arrayMap = $input->getOption('alias-map');
         if ($arrayMap) {
