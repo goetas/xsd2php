@@ -16,7 +16,55 @@ use Zend\Code\Generator\PropertyGenerator;
 
 class ClassGenerator
 {
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPClass $type
+     * @return bool
+     */
+    public function generate(Generator\ClassGenerator $class, PHPClass $type)
+    {
+        $docblock = new DocBlockGenerator("Class representing " . $type->getName());
+        if ($type->getDoc()) {
+            $docblock->setLongDescription($type->getDoc());
+        }
+        $class->setNamespaceName($type->getNamespace());
+        $class->setName($type->getName());
+        $class->setDocblock($docblock);
 
+        if ($extends = $type->getExtends()) {
+
+            if ($p = $this->isOneType($extends)) {
+                $this->handleProperty($class, $p);
+                $this->handleValueMethod($class, $p, $extends);
+            } else {
+
+                $class->setExtendedClass($extends->getName());
+
+                if ($extends->getNamespace() != $type->getNamespace()) {
+                    if ($extends->getName() == $type->getName()) {
+                        $class->addUse(
+                            $type->getExtends()
+                                ->getFullName(),
+                            $extends->getName() . "Base"
+                        );
+                        $class->setExtendedClass($extends->getName() . "Base");
+                    } else {
+                        $class->addUse($extends->getFullName());
+                    }
+                }
+            }
+        }
+
+        if ($this->handleBody($class, $type)) {
+            return true;
+        }
+    }
+
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPClass $type
+     * @return bool
+     */
     private function handleBody(Generator\ClassGenerator $class, PHPClass $type)
     {
         foreach ($type->getProperties() as $prop) {
@@ -37,6 +85,10 @@ class ClassGenerator
         return true;
     }
 
+    /**
+     * @param PHPClass $class
+     * @return bool
+     */
     private function isNativeType(PHPClass $class)
     {
         return !$class->getNamespace() && in_array(
@@ -54,6 +106,10 @@ class ClassGenerator
         );
     }
 
+    /**
+     * @param PHPClass $class
+     * @return string
+     */
     private function getPhpType(PHPClass $class)
     {
         if (!$class->getNamespace()) {
@@ -65,6 +121,12 @@ class ClassGenerator
         return "\\" . $class->getFullName();
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     * @param bool|true $all
+     */
     private function handleValueMethod(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class, $all = true)
     {
         $type = $prop->getType();
@@ -81,8 +143,8 @@ class ClassGenerator
         }
         $method = new MethodGenerator(
             "__construct", [
-            $param
-        ]
+                $param
+            ]
         );
         $method->setDocBlock($docblock);
         $method->setBody("\$this->value(\$value);");
@@ -142,6 +204,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleSetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         $methodBody = '';
@@ -211,6 +278,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleGetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
 
@@ -250,7 +322,6 @@ class ClassGenerator
             $method->setBody("unset(\$this->" . $prop->getName() . "[\$index]);");
             $generator->addMethodFromGenerator($method);
         }
-        // ////
 
         $docblock = new DocBlockGenerator();
 
@@ -290,6 +361,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param PHPClass $type
+     * @param bool|false $onlyParent
+     * @return PHPProperty
+     */
     private function isOneType(PHPClass $type, $onlyParent = false)
     {
         if ($onlyParent) {
@@ -306,6 +382,11 @@ class ClassGenerator
         }
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleAdder(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         $type = $prop->getType();
@@ -359,6 +440,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleMethod(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         if ($prop->getType() instanceof PHPClassOf) {
@@ -369,6 +455,10 @@ class ClassGenerator
         $this->handleSetter($generator, $prop, $class);
     }
 
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPProperty $prop
+     */
     private function handleProperty(Generator\ClassGenerator $class, PHPProperty $prop)
     {
         $generatedProp = new PropertyGenerator($prop->getName());
@@ -409,44 +499,5 @@ class ClassGenerator
             }
         }
         $docBlock->setTag($tag);
-    }
-
-    public function generate(Generator\ClassGenerator $class, PHPClass $type)
-    {
-        $docblock = new DocBlockGenerator("Class representing " . $type->getName());
-        if ($type->getDoc()) {
-            $docblock->setLongDescription($type->getDoc());
-        }
-        $class->setNamespaceName($type->getNamespace());
-        $class->setName($type->getName());
-        $class->setDocblock($docblock);
-
-        if ($extends = $type->getExtends()) {
-
-            if ($p = $this->isOneType($extends)) {
-                $this->handleProperty($class, $p);
-                $this->handleValueMethod($class, $p, $extends);
-            } else {
-
-                $class->setExtendedClass($extends->getName());
-
-                if ($extends->getNamespace() != $type->getNamespace()) {
-                    if ($extends->getName() == $type->getName()) {
-                        $class->addUse(
-                            $type->getExtends()
-                                ->getFullName(),
-                            $extends->getName() . "Base"
-                        );
-                        $class->setExtendedClass($extends->getName() . "Base");
-                    } else {
-                        $class->addUse($extends->getFullName());
-                    }
-                }
-            }
-        }
-
-        if ($this->handleBody($class, $type)) {
-            return true;
-        }
     }
 }
