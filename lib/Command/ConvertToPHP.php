@@ -1,13 +1,13 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Command;
 
-use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
+use Goetas\Xsd\XsdToPhp\AbstractConverter;
+use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 use Goetas\Xsd\XsdToPhp\Php\ClassGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
-use Goetas\Xsd\XsdToPhp\AbstractConverter;
+use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
 use Symfony\Component\Console\Output\OutputInterface;
 use Zend\Code\Generator\FileGenerator;
-use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 
 class ConvertToPHP extends AbstractConvert
 {
@@ -42,7 +42,6 @@ class ConvertToPHP extends AbstractConvert
             $output->write(" Creating <info>" . $output->getFormatter()->escape($item->getFullName()) . "</info>... ");
             $path = $pathGenerator->getPath($item);
 
-
             $fileGen = new FileGenerator();
             $fileGen->setFilename($path);
             $classGen = new \Zend\Code\Generator\ClassGenerator();
@@ -53,7 +52,7 @@ class ConvertToPHP extends AbstractConvert
 
                 $fileGen->write();
                 $output->writeln("done.");
-            }else{
+            } else {
                 $output->write("skip.");
 
             }

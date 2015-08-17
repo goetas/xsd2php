@@ -1,12 +1,12 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Jms\Handler;
 
-use RuntimeException;
-use JMS\Serializer\XmlDeserializationVisitor;
-use JMS\Serializer\Handler\SubscribingHandlerInterface;
-use JMS\Serializer\GraphNavigator;
-use JMS\Serializer\XmlSerializationVisitor;
 use JMS\Serializer\Context;
+use JMS\Serializer\GraphNavigator;
+use JMS\Serializer\Handler\SubscribingHandlerInterface;
+use JMS\Serializer\XmlDeserializationVisitor;
+use JMS\Serializer\XmlSerializationVisitor;
+use RuntimeException;
 
 class XmlSchemaDateHandler implements SubscribingHandlerInterface
 {
@@ -18,27 +18,27 @@ class XmlSchemaDateHandler implements SubscribingHandlerInterface
         return array(
             array(
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\XMLSchema\DateTime',
-                'method' => 'deserializeDateTime'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\XMLSchema\DateTime',
+                'method'    => 'deserializeDateTime'
             ),
             array(
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\XMLSchema\DateTime',
-                'method' => 'serializeDateTime'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\XMLSchema\DateTime',
+                'method'    => 'serializeDateTime'
             ),
             array(
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\XMLSchema\Time',
-                'method' => 'deserializeTime'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\XMLSchema\Time',
+                'method'    => 'deserializeTime'
             ),
             array(
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\XMLSchema\Time',
-                'method' => 'serializeTime'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\XMLSchema\Time',
+                'method'    => 'serializeTime'
             )
         );
     }
@@ -53,8 +53,8 @@ class XmlSchemaDateHandler implements SubscribingHandlerInterface
     {
 
         $v = $date->format(\DateTime::W3C);
-        if (substr($v, - 5) == "00:00") {
-            $v = substr($v, 0, - 6);
+        if (substr($v, -5) == "00:00") {
+            $v = substr($v, 0, -6);
         }
         return $visitor->visitSimpleString($v, $type, $context);
     }
@@ -62,7 +62,7 @@ class XmlSchemaDateHandler implements SubscribingHandlerInterface
     public function deserializeDateTime(XmlDeserializationVisitor $visitor, $data, array $type)
     {
         $attributes = $data->attributes('xsi', true);
-        if (isset($attributes['nil'][0]) && (string) $attributes['nil'][0] === 'true') {
+        if (isset($attributes['nil'][0]) && (string)$attributes['nil'][0] === 'true') {
             return null;
         }
 
@@ -73,8 +73,8 @@ class XmlSchemaDateHandler implements SubscribingHandlerInterface
     public function serializeTime(XmlSerializationVisitor $visitor, \DateTime $date, array $type, Context $context)
     {
         $v = $date->format('H:i:s');
-        if ($date->getTimezone()->getOffset($date)!==$this->defaultTimezone->getOffset($date)){
-            $v.= $date->format('P');
+        if ($date->getTimezone()->getOffset($date) !== $this->defaultTimezone->getOffset($date)) {
+            $v .= $date->format('P');
         }
         return $visitor->visitSimpleString($v, $type, $context);
     }
@@ -82,19 +82,19 @@ class XmlSchemaDateHandler implements SubscribingHandlerInterface
     public function deserializeTime(XmlDeserializationVisitor $visitor, $data, array $type)
     {
         $attributes = $data->attributes('xsi', true);
-        if (isset($attributes['nil'][0]) && (string) $attributes['nil'][0] === 'true') {
+        if (isset($attributes['nil'][0]) && (string)$attributes['nil'][0] === 'true') {
             return null;
         }
 
-        $data = (string) $data;
+        $data = (string)$data;
 
-        return new \DateTime( $data, $this->defaultTimezone );
+        return new \DateTime($data, $this->defaultTimezone);
     }
 
     private function parseDateTime($data, array $type)
     {
         $timezone = isset($type['params'][1]) ? new \DateTimeZone($type['params'][1]) : $this->defaultTimezone;
-        $datetime = new \DateTime((string) $data, $timezone);
+        $datetime = new \DateTime((string)$data, $timezone);
         if (false === $datetime) {
             throw new RuntimeException(sprintf('Invalid datetime "%s", expected valid XML Schema dateTime string.', $data));
         }

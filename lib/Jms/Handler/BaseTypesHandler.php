@@ -1,11 +1,11 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Jms\Handler;
 
-use JMS\Serializer\Handler\SubscribingHandlerInterface;
-use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Context;
-use JMS\Serializer\XmlSerializationVisitor;
+use JMS\Serializer\GraphNavigator;
+use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use JMS\Serializer\XmlDeserializationVisitor;
+use JMS\Serializer\XmlSerializationVisitor;
 
 class BaseTypesHandler implements SubscribingHandlerInterface
 {
@@ -15,15 +15,15 @@ class BaseTypesHandler implements SubscribingHandlerInterface
         return array(
             array(
                 'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\Jms\SimpleListOf',
-                'method' => 'simpleListOfToXml'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\Jms\SimpleListOf',
+                'method'    => 'simpleListOfToXml'
             ),
             array(
                 'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
-                'format' => 'xml',
-                'type' => 'Goetas\Xsd\XsdToPhp\Jms\SimpleListOf',
-                'method' => 'simpleListOfFromXML'
+                'format'    => 'xml',
+                'type'      => 'Goetas\Xsd\XsdToPhp\Jms\SimpleListOf',
+                'method'    => 'simpleListOfFromXML'
             )
         );
     }
@@ -32,12 +32,12 @@ class BaseTypesHandler implements SubscribingHandlerInterface
     {
 
         $newType = array(
-            'name' => $type["params"][0]["name"],
+            'name'   => $type["params"][0]["name"],
             'params' => array()
         );
 
         $ret = array();
-        foreach ($object as $v){
+        foreach ($object as $v) {
             $ret[] = $context->accept($v, $newType)->data;
         }
 
@@ -47,11 +47,11 @@ class BaseTypesHandler implements SubscribingHandlerInterface
     public function simpleListOfFromXml(XmlDeserializationVisitor $visitor, $node, array $type, Context $context)
     {
         $newType = array(
-            'name' => $type["params"][0]["name"],
+            'name'   => $type["params"][0]["name"],
             'params' => array()
         );
         $ret = array();
-        foreach (explode(" ", (string)$node) as $v){
+        foreach (explode(" ", (string)$node) as $v) {
             $ret[] = $context->accept($v, $newType);
         }
         return $ret;
