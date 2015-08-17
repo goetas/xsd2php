@@ -6,6 +6,7 @@ use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 use Goetas\Xsd\XsdToPhp\Php\ClassGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
+use Symfony\Component\Console\Helper\ProgressHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 use Zend\Code\Generator\FileGenerator;
 
@@ -23,15 +24,28 @@ class ConvertToPHP extends AbstractConvert
         $this->setDescription('Convert XSD definitions into PHP classes');
     }
 
+    /**
+     * @param NamingStrategy $naming
+     * @return PhpConverter
+     */
     protected function getConverterter(NamingStrategy $naming)
     {
         return new PhpConverter($naming);
     }
 
+    /**
+     * @param AbstractConverter $converter
+     * @param array $schemas
+     * @param array $targets
+     * @param OutputInterface $output
+     * @throws \Goetas\Xsd\XsdToPhp\PathGenerator\PathGeneratorException
+     */
     protected function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output)
     {
         $generator = new ClassGenerator();
         $pathGenerator = new Psr4PathGenerator($targets);
+
+        /** @var ProgressHelper $progress */
         $progress = $this->getHelperSet()->get('progress');
 
         $items = $converter->convert($schemas);

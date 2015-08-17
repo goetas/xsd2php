@@ -8,11 +8,13 @@ use Goetas\Xsd\XsdToPhp\Naming\LongNamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Symfony\Component\Console;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-abstract class AbstractConvert extends Console\Command\Command
+abstract class AbstractConvert extends Command
 {
 
     /**
@@ -33,14 +35,12 @@ abstract class AbstractConvert extends Console\Command\Command
     }
 
     /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws Exception
      */
-    protected abstract function getConverterter(NamingStrategy $naming);
-
-    /**
-     *
-     * @see Console\Command\Command
-     */
-    protected function execute(Console\Input\InputInterface $input, Console\Output\OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $src = $input->getArgument('src');
 
@@ -124,5 +124,18 @@ abstract class AbstractConvert extends Console\Command\Command
         return 0;
     }
 
+    /**
+     * @param NamingStrategy $naming
+     * @return AbstractConverter
+     */
+    protected abstract function getConverterter(NamingStrategy $naming);
+
+    /**
+     * @param AbstractConverter $converter
+     * @param array $schemas
+     * @param array $targets
+     * @param OutputInterface $output
+     * @return mixed
+     */
     protected abstract function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output);
 }
