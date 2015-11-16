@@ -3,20 +3,81 @@ namespace Goetas\Xsd\XsdToPhp\Php;
 
 use Doctrine\Common\Inflector\Inflector;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
-use Goetas\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
+use Goetas\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Zend\Code\Generator;
-use Zend\Code\Generator\PropertyGenerator;
-use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
+use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
 use Zend\Code\Generator\DocBlock\Tag\ReturnTag;
+use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
-use Zend\Code\Generator\DocBlock\Tag\PropertyTag;
+use Zend\Code\Generator\PropertyGenerator;
 
 class ClassGenerator
 {
+    /**
+     * @var DocBlockGenerator
+     */
+    private $docBlockGeneratorPrototype;
 
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPClass $type
+     * @return bool
+     */
+    public function generate(Generator\ClassGenerator $class, PHPClass $type)
+    {
+        $docblock = $this->createDocBlockGenerator("Class representing " . $type->getName());
+        if ($type->getDoc()) {
+            $docblock->setLongDescription($type->getDoc());
+        }
+        $class->setNamespaceName($type->getNamespace());
+        $class->setName($type->getName());
+        $class->setDocblock($docblock);
+
+        if ($extends = $type->getExtends()) {
+
+            if ($p = $this->isOneType($extends)) {
+                $this->handleProperty($class, $p);
+                $this->handleValueMethod($class, $p, $extends);
+            } else {
+
+                $class->setExtendedClass($extends->getName());
+
+                if ($extends->getNamespace() != $type->getNamespace()) {
+                    if ($extends->getName() == $type->getName()) {
+                        $class->addUse(
+                            $type->getExtends()
+                                ->getFullName(),
+                            $extends->getName() . "Base"
+                        );
+                        $class->setExtendedClass($extends->getName() . "Base");
+                    } else {
+                        $class->addUse($extends->getFullName());
+                    }
+                }
+            }
+        }
+
+        if ($this->handleBody($class, $type)) {
+            return true;
+        }
+    }
+
+    /**
+     * @param DocBlockGenerator $docBlockGeneratorPrototype
+     */
+    public function setDocBlockGeneratorPrototype(DocBlockGenerator $docBlockGeneratorPrototype = null)
+    {
+        $this->docBlockGeneratorPrototype = $docBlockGeneratorPrototype;
+    }
+
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPClass $type
+     * @return bool
+     */
     private function handleBody(Generator\ClassGenerator $class, PHPClass $type)
     {
         foreach ($type->getProperties() as $prop) {
@@ -37,23 +98,52 @@ class ClassGenerator
         return true;
     }
 
+    /**
+     * @param PHPClass $class
+     * @return bool
+     */
     private function isNativeType(PHPClass $class)
     {
-        return ! $class->getNamespace() && in_array($class->getName(), [
-            'string',
-            'int',
-            'float',
-            'integer',
-            'boolean',
-            'array',
-            'mixed',
-            'callable'
-        ]);
+        return !$class->getNamespace() && in_array(
+            $class->getName(),
+            [
+                'string',
+                'int',
+                'float',
+                'integer',
+                'boolean',
+                'array',
+                'mixed',
+                'callable'
+            ]
+        );
     }
 
+    /**
+     * @param string $shortDescription
+     * @param string $longDescription
+     * @param array $tags
+     * @return DocBlockGenerator
+     */
+    private function createDocBlockGenerator($shortDescription = null, $longDescription = null, array $tags = [])
+    {
+        $docBlockGenerator = $this->docBlockGeneratorPrototype ?
+            clone $this->docBlockGeneratorPrototype : new DocBlockGenerator();
+
+        $docBlockGenerator->setShortDescription($shortDescription);
+        $docBlockGenerator->setLongDescription($longDescription);
+        $docBlockGenerator->setTags($tags);
+
+        return $docBlockGenerator;
+    }
+
+    /**
+     * @param PHPClass $class
+     * @return string
+     */
     private function getPhpType(PHPClass $class)
     {
-        if (! $class->getNamespace()) {
+        if (!$class->getNamespace()) {
             if ($this->isNativeType($class)) {
                 return $class->getName();
             }
@@ -62,33 +152,45 @@ class ClassGenerator
         return "\\" . $class->getFullName();
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     * @param bool|true $all
+     */
     private function handleValueMethod(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class, $all = true)
     {
         $type = $prop->getType();
 
-        $docblock = new DocBlockGenerator('Construct');
+        $docblock = $this->createDocBlockGenerator('Construct');
         $paramTag = new ParamTag("value", "mixed");
         $paramTag->setTypes(($type ? $this->getPhpType($type) : "mixed"));
 
         $docblock->setTag($paramTag);
 
         $param = new ParameterGenerator("value");
-        if ($type && ! $this->isNativeType($type)) {
+        if ($type && !$this->isNativeType($type)) {
             $param->setType($this->getPhpType($type));
         }
-        $method = new MethodGenerator("__construct", [
-            $param
-        ]);
+        $method = new MethodGenerator(
+            "__construct", [
+                $param
+            ]
+        );
         $method->setDocBlock($docblock);
         $method->setBody("\$this->value(\$value);");
 
         $generator->addMethodFromGenerator($method);
 
-        $docblock = new DocBlockGenerator('Gets or sets the inner value');
+        $docblock = $this->createDocBlockGenerator('Gets or sets the inner value');
         $paramTag = new ParamTag("value", "mixed");
         if ($type && $type instanceof PHPClassOf) {
-            $paramTag->setTypes($this->getPhpType($type->getArg()
-                ->getType()) . "[]");
+            $paramTag->setTypes(
+                $this->getPhpType(
+                    $type->getArg()
+                        ->getType()
+                ) . "[]"
+            );
         } elseif ($type) {
             $paramTag->setTypes($this->getPhpType($prop->getType()));
         }
@@ -97,8 +199,12 @@ class ClassGenerator
         $returnTag = new ReturnTag("mixed");
 
         if ($type && $type instanceof PHPClassOf) {
-            $returnTag->setTypes($this->getPhpType($type->getArg()
-                ->getType()) . "[]");
+            $returnTag->setTypes(
+                $this->getPhpType(
+                    $type->getArg()
+                        ->getType()
+                ) . "[]"
+            );
         } elseif ($type) {
             $returnTag->setTypes($this->getPhpType($type));
         }
@@ -107,7 +213,7 @@ class ClassGenerator
         $param = new ParameterGenerator("value");
         $param->setDefaultValue(null);
 
-        if ($type && ! $this->isNativeType($type)) {
+        if ($type && !$this->isNativeType($type)) {
             $param->setType($this->getPhpType($type));
         }
         $method = new MethodGenerator("value", []);
@@ -121,7 +227,7 @@ class ClassGenerator
 
         $generator->addMethodFromGenerator($method);
 
-        $docblock = new DocBlockGenerator('Gets a string value');
+        $docblock = $this->createDocBlockGenerator('Gets a string value');
         $docblock->setTag(new ReturnTag("string"));
         $method = new MethodGenerator("__toString");
         $method->setDocBlock($docblock);
@@ -129,10 +235,15 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleSetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         $methodBody = '';
-        $docblock = new DocBlockGenerator();
+        $docblock = $this->createDocBlockGenerator();
 
         $docblock->setShortDescription("Sets a new " . $prop->getName());
 
@@ -153,12 +264,19 @@ class ClassGenerator
         $parameter = new ParameterGenerator($prop->getName(), "mixed");
 
         if ($type && $type instanceof PHPClassOf) {
-            $patramTag->setTypes($this->getPhpType($type->getArg()
-                ->getType()) . "[]");
+            $patramTag->setTypes(
+                $this->getPhpType(
+                    $type->getArg()
+                        ->getType()
+                ) . "[]"
+            );
             $parameter->setType("array");
 
-            if ($p = $this->isOneType($type->getArg()
-                ->getType())) {
+            if ($p = $this->isOneType(
+                $type->getArg()
+                    ->getType()
+            )
+            ) {
                 if (($t = $p->getType())) {
                     $patramTag->setTypes($this->getPhpType($t));
                 }
@@ -167,10 +285,10 @@ class ClassGenerator
             if ($this->isNativeType($type)) {
                 $patramTag->setTypes($this->getPhpType($type));
             } elseif ($p = $this->isOneType($type)) {
-                if (($t = $p->getType()) && ! $this->isNativeType($t)) {
+                if (($t = $p->getType()) && !$this->isNativeType($t)) {
                     $patramTag->setTypes($this->getPhpType($t));
                     $parameter->setType($this->getPhpType($t));
-                } elseif ($t && ! $this->isNativeType($t)) {
+                } elseif ($t && !$this->isNativeType($t)) {
                     $patramTag->setTypes($this->getPhpType($t));
                     $parameter->setType($this->getPhpType($t));
                 } elseif ($t) {
@@ -191,11 +309,16 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleGetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
 
-        if ($prop->getType() instanceof PHPClassOf){
-            $docblock = new DocBlockGenerator();
+        if ($prop->getType() instanceof PHPClassOf) {
+            $docblock = $this->createDocBlockGenerator();
             $docblock->setShortDescription("isset " . $prop->getName());
             if ($prop->getDoc()) {
                 $docblock->setLongDescription($prop->getDoc());
@@ -213,7 +336,7 @@ class ClassGenerator
             $method->setBody("return isset(\$this->" . $prop->getName() . "[\$index]);");
             $generator->addMethodFromGenerator($method);
 
-            $docblock = new DocBlockGenerator();
+            $docblock = $this->createDocBlockGenerator();
             $docblock->setShortDescription("unset " . $prop->getName());
             if ($prop->getDoc()) {
                 $docblock->setLongDescription($prop->getDoc());
@@ -225,16 +348,13 @@ class ClassGenerator
 
             $docblock->setTag(new ReturnTag("void"));
 
-
-
             $method = new MethodGenerator("unset" . Inflector::classify($prop->getName()), [$paramIndex]);
             $method->setDocBlock($docblock);
             $method->setBody("unset(\$this->" . $prop->getName() . "[\$index]);");
             $generator->addMethodFromGenerator($method);
         }
-        // ////
 
-        $docblock = new DocBlockGenerator();
+        $docblock = $this->createDocBlockGenerator();
 
         $docblock->setShortDescription("Gets as " . $prop->getName());
 
@@ -272,6 +392,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param PHPClass $type
+     * @param bool|false $onlyParent
+     * @return PHPProperty
+     */
     private function isOneType(PHPClass $type, $onlyParent = false)
     {
         if ($onlyParent) {
@@ -288,12 +413,17 @@ class ClassGenerator
         }
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleAdder(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         $type = $prop->getType();
         $propName = $type->getArg()->getName();
 
-        $docblock = new DocBlockGenerator();
+        $docblock = $this->createDocBlockGenerator();
         $docblock->setShortDescription("Adds as $propName");
 
         if ($prop->getDoc()) {
@@ -304,26 +434,30 @@ class ClassGenerator
         $return->setTypes("self");
         $docblock->setTag($return);
 
-        $patramTag = new ParamTag($propName, $this->getPhpType($type->getArg()
-            ->getType()));
+        $patramTag = new ParamTag(
+            $propName, $this->getPhpType(
+            $type->getArg()
+                ->getType()
+        )
+        );
         $docblock->setTag($patramTag);
 
-        $method = new MethodGenerator("addTo".Inflector::classify($prop->getName()));
+        $method = new MethodGenerator("addTo" . Inflector::classify($prop->getName()));
 
         $parameter = new ParameterGenerator($propName);
         $tt = $type->getArg()->getType();
 
-        if (! $this->isNativeType($tt)) {
+        if (!$this->isNativeType($tt)) {
 
             if ($p = $this->isOneType($tt)) {
                 if (($t = $p->getType())) {
                     $patramTag->setTypes($this->getPhpType($t));
 
-                    if (! $this->isNativeType($t)) {
+                    if (!$this->isNativeType($t)) {
                         $parameter->setType($this->getPhpType($t));
                     }
                 }
-            } elseif (! $this->isNativeType($tt)) {
+            } elseif (!$this->isNativeType($tt)) {
                 $parameter->setType($this->getPhpType($tt));
             }
         }
@@ -337,6 +471,11 @@ class ClassGenerator
         $generator->addMethodFromGenerator($method);
     }
 
+    /**
+     * @param Generator\ClassGenerator $generator
+     * @param PHPProperty $prop
+     * @param PHPClass $class
+     */
     private function handleMethod(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class)
     {
         if ($prop->getType() instanceof PHPClassOf) {
@@ -347,6 +486,10 @@ class ClassGenerator
         $this->handleSetter($generator, $prop, $class);
     }
 
+    /**
+     * @param Generator\ClassGenerator $class
+     * @param PHPProperty $prop
+     */
     private function handleProperty(Generator\ClassGenerator $class, PHPProperty $prop)
     {
         $generatedProp = new PropertyGenerator($prop->getName());
@@ -354,11 +497,11 @@ class ClassGenerator
 
         $class->addPropertyFromGenerator($generatedProp);
 
-        if ($prop->getType() && (! $prop->getType()->getNamespace() && $prop->getType()->getName() == "array")) {
+        if ($prop->getType() && (!$prop->getType()->getNamespace() && $prop->getType()->getName() == "array")) {
             // $generatedProp->setDefaultValue(array(), PropertyValueGenerator::TYPE_AUTO, PropertyValueGenerator::OUTPUT_SINGLE_LINE);
         }
 
-        $docBlock = new DocBlockGenerator();
+        $docBlock = $this->createDocBlockGenerator();
         $generatedProp->setDocBlock($docBlock);
 
         if ($prop->getDoc()) {
@@ -387,41 +530,5 @@ class ClassGenerator
             }
         }
         $docBlock->setTag($tag);
-    }
-
-    public function generate(Generator\ClassGenerator $class, PHPClass $type)
-    {
-        $docblock = new DocBlockGenerator("Class representing " . $type->getName());
-        if ($type->getDoc()) {
-            $docblock->setLongDescription($type->getDoc());
-        }
-        $class->setNamespaceName($type->getNamespace());
-        $class->setName($type->getName());
-        $class->setDocblock($docblock);
-
-        if ($extends = $type->getExtends()) {
-
-            if ($p = $this->isOneType($extends)) {
-                $this->handleProperty($class, $p);
-                $this->handleValueMethod($class, $p, $extends);
-            } else {
-
-                $class->setExtendedClass($extends->getName());
-
-                if ($extends->getNamespace() != $type->getNamespace()) {
-                    if ($extends->getName() == $type->getName()) {
-                        $class->addUse($type->getExtends()
-                            ->getFullName(), $extends->getName() . "Base");
-                        $class->setExtendedClass($extends->getName() . "Base");
-                    } else {
-                        $class->addUse($extends->getFullName());
-                    }
-                }
-            }
-        }
-
-        if ($this->handleBody($class, $type)) {
-            return true;
-        }
     }
 }

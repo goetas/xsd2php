@@ -9,18 +9,41 @@ class PHPClass
     protected $namespace;
 
     protected $doc;
+    protected $checks = array();
+    /**
+     *
+     * @var PHPConstant[]
+     */
+    protected $constants = array();
+    /**
+     *
+     * @var PHPProperty[]
+     */
+    protected $properties = array();
+    /**
+     *
+     * @var boolean
+     */
+    protected $abstract;
+    /**
+     *
+     * @var PHPClass
+     */
+    protected $extends;
 
-    public static function createFromFQCN($className){
+    public function __construct($name = null, $namespace = null)
+    {
+        $this->name = $name;
+        $this->namespace = $namespace;
+    }
+
+    public static function createFromFQCN($className)
+    {
         if (($pos = strrpos($className, '\\')) !== false) {
             return new self(substr($className, $pos + 1), substr($className, 0, $pos));
         } else {
             return new self($className);
         }
-    }
-    public function __construct($name = null, $namespace = null)
-    {
-        $this->name = $name;
-        $this->namespace = $namespace;
     }
 
     public function getName()
@@ -65,20 +88,6 @@ class PHPClass
     {
         return "{$this->namespace}\\{$this->name}";
     }
-
-    protected $checks = array();
-
-    /**
-     *
-     * @var PHPConstant[]
-     */
-    protected $constants = array();
-
-    /**
-     *
-     * @var PHPProperty[]
-     */
-    protected $properties = array();
 
     /**
      *
@@ -197,18 +206,6 @@ class PHPClass
 
     /**
      *
-     * @var boolean
-     */
-    protected $abstract;
-
-    /**
-     *
-     * @var PHPClass
-     */
-    protected $extends;
-
-    /**
-     *
      * @return PHPClass
      */
     public function getExtends()
@@ -234,7 +231,7 @@ class PHPClass
 
     public function setAbstract($abstract)
     {
-        $this->abstract = (boolean) $abstract;
+        $this->abstract = (boolean)$abstract;
         return $this;
     }
 }

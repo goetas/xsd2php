@@ -1,47 +1,91 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Command;
 
-use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
+use Goetas\Xsd\XsdToPhp\AbstractConverter;
+use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Goetas\Xsd\XsdToPhp\PathGenerator\PathGeneratorException;
 use Goetas\Xsd\XsdToPhp\Php\ClassGenerator;
 use Goetas\Xsd\XsdToPhp\Php\PathGenerator\Psr4PathGenerator;
-use Goetas\Xsd\XsdToPhp\AbstractConverter;
+use Goetas\Xsd\XsdToPhp\Php\PhpConverter;
+use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
+use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Helper\ProgressHelper;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\FileGenerator;
-use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
 
 class ConvertToPHP extends AbstractConvert
 {
-
     /**
-     *
-     * @see Console\Command\Command
+     * @var bool
      */
+    private $docBlockNoWordWrap = false;
+
     protected function configure()
     {
         parent::configure();
         $this->setName('convert:php');
         $this->setDescription('Convert XSD definitions into PHP classes');
+        $this->addOption('docblock-nowordwrap', null, InputOption::VALUE_NONE);
     }
 
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws \Exception
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        if ($input->getOption('docblock-nowordwrap')) {
+            $this->docBlockNoWordWrap = true;
+        }
+
+        return parent::execute($input, $output);
+    }
+
+    /**
+     * @param NamingStrategy $naming
+     * @return PhpConverter
+     */
     protected function getConverterter(NamingStrategy $naming)
     {
         return new PhpConverter($naming);
     }
 
+    /**
+     * @param AbstractConverter $converter
+     * @param array $schemas
+     * @param array $targets
+     * @param OutputInterface $output
+     * @return mixed|void
+     * @throws PathGeneratorException
+     */
     protected function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output)
     {
         $generator = new ClassGenerator();
+
+        if ($this->docBlockNoWordWrap) {
+            $docBlock = new DocBlockGenerator();
+            $docBlock->setWordWrap(false);
+            $generator->setDocBlockGeneratorPrototype($docBlock);
+        }
+
         $pathGenerator = new Psr4PathGenerator($targets);
+
+        /** @var ProgressHelper $progress */
         $progress = $this->getHelperSet()->get('progress');
 
         $items = $converter->convert($schemas);
         $progress->start($output, count($items));
 
+        /** @var PHPClass $item */
         foreach ($items as $item) {
             $progress->advance(1, true);
-            $output->write(" Creating <info>" . $output->getFormatter()->escape($item->getFullName()) . "</info>... ");
+            $output->write(" Creating <info>" . OutputFormatter::escape($item->getFullName()) . "</info>... ");
             $path = $pathGenerator->getPath($item);
-
 
             $fileGen = new FileGenerator();
             $fileGen->setFilename($path);
@@ -53,7 +97,7 @@ class ConvertToPHP extends AbstractConvert
 
                 $fileGen->write();
                 $output->writeln("done.");
-            }else{
+            } else {
                 $output->write("skip.");
 
             }

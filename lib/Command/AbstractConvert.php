@@ -2,61 +2,58 @@
 namespace Goetas\Xsd\XsdToPhp\Command;
 
 use Exception;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console;
 use Goetas\XML\XSDReader\SchemaReader;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
-use Symfony\Component\Console\Output\OutputInterface;
-use Goetas\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\LongNamingStrategy;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
+use Goetas\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Symfony\Component\Console;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
-abstract class AbstractConvert extends Console\Command\Command
+abstract class AbstractConvert extends Command
 {
-
-    /**
-     *
-     * @see Console\Command\Command
-     */
     protected function configure()
     {
-        $this->setDefinition(array(
-            new InputArgument('src', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'Where is located your XSD definitions'),
-            new InputOption('ns-map', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'How to map XML namespaces to PHP namespaces? Syntax: <info>XML-namespace;PHP-namespace</info>'),
-            new InputOption('ns-dest', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Where place the generated files? Syntax: <info>PHP-namespace;destination-directory</info>'),
-            new InputOption('alias-map', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'How to map XML namespaces into existing PHP classes? Syntax: <info>XML-namespace;XML-type;PHP-type</info>. '),
-            new InputOption('naming-strategy', null, InputOption::VALUE_REQUIRED, 'The naming strategy for classes. short|long', 'short')
-        ));
+        $this->setDefinition(
+            array(
+                new InputArgument('src', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'Where is located your XSD definitions'),
+                new InputOption('ns-map', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'How to map XML namespaces to PHP namespaces? Syntax: <info>XML-namespace;PHP-namespace</info>'),
+                new InputOption('ns-dest', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Where place the generated files? Syntax: <info>PHP-namespace;destination-directory</info>'),
+                new InputOption('alias-map', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'How to map XML namespaces into existing PHP classes? Syntax: <info>XML-namespace;XML-type;PHP-type</info>. '),
+                new InputOption('naming-strategy', null, InputOption::VALUE_REQUIRED, 'The naming strategy for classes. short|long', 'short')
+            )
+        );
     }
 
     /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws Exception
      */
-    protected abstract function getConverterter(NamingStrategy $naming);
-
-    /**
-     *
-     * @see Console\Command\Command
-     */
-    protected function execute(Console\Input\InputInterface $input, Console\Output\OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $src = $input->getArgument('src');
 
         $nsMap = $input->getOption('ns-map');
-        if (! $nsMap) {
+        if (!$nsMap) {
             throw new \RuntimeException(__CLASS__ . " requires at least one ns-map.");
         }
 
         $nsTarget = $input->getOption('ns-dest');
-        if (! $nsTarget) {
+        if (!$nsTarget) {
             throw new \RuntimeException(__CLASS__ . " requires at least one ns-target.");
         }
 
-        if($input->getOption('naming-strategy')=='short'){
+        if ($input->getOption('naming-strategy') == 'short') {
             $naming = new ShortNamingStrategy();
-        }elseif($input->getOption('naming-strategy')=='long'){
+        } elseif ($input->getOption('naming-strategy') == 'long') {
             $naming = new LongNamingStrategy();
-        }else{
+        } else {
             throw new \InvalidArgumentException("Unsupported naming strategy");
         }
 
@@ -71,7 +68,7 @@ abstract class AbstractConvert extends Console\Command\Command
             list ($xmlNs, $phpNs) = explode(";", $val, 2);
             $nsMapKeyed[$xmlNs] = $phpNs;
             $converter->addNamespace($xmlNs, trim(strtr($phpNs, "./", "\\\\"), "\\"));
-            $output->writeln("\tXML namepsace: <comment>$xmlNs</comment> => PHP namepsace: <info>$phpNs</info>");
+            $output->writeln("\tXML namespace: <comment>$xmlNs</comment> => PHP namespace: <info>$phpNs</info>");
         }
         $targets = array();
         $output->writeln("Target directories:");
@@ -83,7 +80,7 @@ abstract class AbstractConvert extends Console\Command\Command
             $phpNs = strtr($phpNs, "./", "\\\\");
 
             $targets[$phpNs] = $dir;
-            $output->writeln("\tPHP namepsace: <comment>" . strtr($phpNs, "\\", "/") . "</comment> => Destination directory: <info>$dir</info>");
+            $output->writeln("\tPHP namespace: <comment>" . strtr($phpNs, "\\", "/") . "</comment> => Destination directory: <info>$dir</info>");
         }
         $arrayMap = $input->getOption('alias-map');
         if ($arrayMap) {
@@ -103,11 +100,11 @@ abstract class AbstractConvert extends Console\Command\Command
             $output->writeln("Reading <comment>$file</comment>");
 
             $xml = new \DOMDocument('1.0', 'UTF-8');
-            if (! $xml->load($file)) {
+            if (!$xml->load($file)) {
                 throw new \Exception("Can't load the schema '{$file}'");
             }
 
-            if (! isset($nsMapKeyed[$xml->documentElement->getAttribute("targetNamespace")])) {
+            if (!isset($nsMapKeyed[$xml->documentElement->getAttribute("targetNamespace")])) {
                 $output->writeln("\tSkipping <comment>" . $xml->documentElement->getAttribute("targetNamespace") . "</comment>, can't find a PHP-equivalent namespace. Use --ns-map option?");
                 continue;
             }
@@ -122,5 +119,18 @@ abstract class AbstractConvert extends Console\Command\Command
         return 0;
     }
 
+    /**
+     * @param NamingStrategy $naming
+     * @return AbstractConverter
+     */
+    protected abstract function getConverterter(NamingStrategy $naming);
+
+    /**
+     * @param AbstractConverter $converter
+     * @param array $schemas
+     * @param array $targets
+     * @param OutputInterface $output
+     * @return mixed
+     */
     protected abstract function convert(AbstractConverter $converter, array $schemas, array $targets, OutputInterface $output);
 }
