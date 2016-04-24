@@ -15,7 +15,9 @@ abstract class Psr4PathGenerator implements PathGenerator
                 throw new PathGeneratorException("A non-empty PSR-4 prefix must end with a namespace separator, you entered '$namespace'.");
             }
             if (! is_dir($dir)) {
-                throw new PathGeneratorException("The folder '$dir' does not exist.");
+                if (!mkdir($dir, 0777, true)) {
+                    throw new PathGeneratorException("The folder '$dir' does not exist and failed to create.");
+                } 
             }
             if (! is_writable($dir)) {
                 throw new PathGeneratorException("The folder '$dir' is not writable.");
