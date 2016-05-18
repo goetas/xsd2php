@@ -408,8 +408,8 @@ class YamlConverter extends AbstractConverter
         $property["access_type"] = "public_method";
         $property["serialized_name"] = $element->getName();
 
-        if ($schema->getTargetNamespace()) {
-            $property["xml_element"]["namespace"] = $schema->getTargetNamespace();
+        if ($element->getSchema()->getTargetNamespace()) {
+            $property["xml_element"]["namespace"] = $element->getSchema()->getTargetNamespace();
         }
 
         $property["accessor"]["getter"] = "get" . Inflector::classify($element->getName());
