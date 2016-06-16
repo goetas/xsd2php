@@ -108,9 +108,12 @@ All reference to this type are replaced with the `Vendor/Project/CustomDateClass
 
 
 * Add xsd2php dependency to satisfy BaseTypesHandler and XmlSchemaDateHandler.
+
+```js
 "require" : {
     "goetas-webservices/xsd2php-runtime":"^0.1",
 }
+```
 
 ```php
 use JMS\Serializer\SerializerBuilder;
