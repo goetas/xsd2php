@@ -290,7 +290,8 @@ class Xsd2PhpGroupTest extends Xsd2JmsBase
                             'xml_list' => array(
                                 'inline' => false,
                                 'entry_name' => 'string',
-                                'namespace' => 'http://www.example.com'
+                                'namespace' => 'http://www.example.com',
+                                'skip_when_empty' => false
                             )
                         )
                     )

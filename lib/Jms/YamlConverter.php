@@ -426,6 +426,7 @@ class YamlConverter extends AbstractConverter
 
                 $property["type"] = "array<" . $visited["type"] . ">";
                 $property["xml_list"]["inline"] = false;
+                $property["xml_list"]["skip_when_empty"] = $element->getMin() === 0;
                 $property["xml_list"]["entry_name"] = $itemOfArray->getName();
                 if ($schema->getTargetNamespace()) {
                     $property["xml_list"]["namespace"] = $schema->getTargetNamespace();
