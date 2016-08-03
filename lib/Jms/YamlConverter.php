@@ -29,10 +29,10 @@ class YamlConverter extends AbstractConverter
         parent::__construct($namingStrategy);
 
         $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "dateTime", function (Type $type) {
-            return "Goetas\Xsd\XsdToPhp\XMLSchema\DateTime";
+            return 'GoetasWebservices\Xsd\XsdToPhp\XMLSchema\DateTime';
         });
         $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "time", function (Type $type) {
-            return "Goetas\Xsd\XsdToPhp\XMLSchema\Time";
+            return 'GoetasWebservices\Xsd\XsdToPhp\XMLSchema\Time';
         });
         $this->addAliasMap("http://www.w3.org/2001/XMLSchema", "date", function (Type $type) {
             return "DateTime<'Y-m-d'>";
@@ -351,9 +351,9 @@ class YamlConverter extends AbstractConverter
         } elseif ($itemOfArray = $this->isArrayType($attribute->getType())) {
 
             if ($valueProp = $this->typeHasValue($itemOfArray, $class, 'xx')) {
-                $property["type"] = "Goetas\Xsd\XsdToPhp\Jms\SimpleListOf<" . $valueProp . ">";
+                $property["type"] = "GoetasWebservices\Xsd\XsdToPhp\Jms\SimpleListOf<" . $valueProp . ">";
             } else {
-                $property["type"] = "Goetas\Xsd\XsdToPhp\Jms\SimpleListOf<" . $this->findPHPName($itemOfArray) . ">";
+                $property["type"] = "GoetasWebservices\Xsd\XsdToPhp\Jms\SimpleListOf<" . $this->findPHPName($itemOfArray) . ">";
             }
 
             $property["xml_list"]["inline"] = false;
@@ -426,6 +426,7 @@ class YamlConverter extends AbstractConverter
 
                 $property["type"] = "array<" . $visited["type"] . ">";
                 $property["xml_list"]["inline"] = false;
+                $property["xml_list"]["skip_when_empty"] = $element->getMin() === 0;
                 $property["xml_list"]["entry_name"] = $itemOfArray->getName();
                 if ($schema->getTargetNamespace()) {
                     $property["xml_list"]["namespace"] = $schema->getTargetNamespace();

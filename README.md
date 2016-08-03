@@ -9,7 +9,7 @@ Convert XSD into PHP classes.
 
 With `goetas/xsd2php` you can convert any XSD/WSDL definition into PHP classes.
 
-XSD2PHP can also generate [JMS Serializer](http://jmsyst.com/libs/serializer) compatible metadata that can be used to serialize/unserialize the object instances.
+**XSD2PHP can also generate [JMS Serializer](http://jmsyst.com/libs/serializer) compatible metadata that can be used to serialize/unserialize the object instances**.
 
 Installation
 -----------
@@ -20,21 +20,12 @@ There is one recommended way to install xsd2php via [Composer](https://getcompos
 * adding the dependency to your ``composer.json`` file:
 
 ```js
-  "require": {
+  "require-dev": {
       ..
-      "goetas/xsd2php":"^2.0",
-      "jms/serializer": "serializer-master-dev as 1.0",
+      "goetas/xsd2php":"^2.1",
       ..
-  },
-  "repositories": [{
-      "type": "vcs",
-      "url": "https://github.com/goetas/serializer.git"
-  }],
+  }
 ```
-
-This package requires a patched version of JMS Serializer.
-In the last year the activity of JMS serializer was very low and some features
-required by this project was rejected or not yet reviewed ( [#222](https://github.com/schmittjoh/serializer/pull/222) )
 
 Usage
 -----
@@ -111,7 +102,7 @@ All reference to this type are replaced with the `Vendor/Project/CustomDateClass
 
 ```js
 "require" : {
-    "goetas-webservices/xsd2php-runtime":"^0.1",
+    "goetas-webservices/xsd2php-runtime":"^0.2.2",
 }
 ```
 
