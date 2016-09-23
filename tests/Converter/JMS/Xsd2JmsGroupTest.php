@@ -45,7 +45,7 @@ class Xsd2PhpGroupTest extends Xsd2JmsBase
 
     public function testSomeAnonymous()
     {
-        error_reporting(error_reporting() &~E_NOTICE);
+        error_reporting(error_reporting() & ~E_NOTICE);
         $content = '
              <xs:schema targetNamespace="http://www.example.com" xmlns:xs="http://www.w3.org/2001/XMLSchema"  xmlns:ex="http://www.example.com">
                     <xs:complexType name="complexType-1">
@@ -117,7 +117,6 @@ class Xsd2PhpGroupTest extends Xsd2JmsBase
                     )
                 )
             ), $classes['Example\\ComplexType1Type']);
-
 
 
         $this->assertEquals(
@@ -291,7 +290,8 @@ class Xsd2PhpGroupTest extends Xsd2JmsBase
                             'xml_list' => array(
                                 'inline' => false,
                                 'entry_name' => 'string',
-                                'namespace' => 'http://www.example.com'
+                                'namespace' => 'http://www.example.com',
+                                'skip_when_empty' => false
                             )
                         )
                     )
