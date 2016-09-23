@@ -15,9 +15,11 @@ use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
 use Zend\Code\Generator\PropertyGenerator;
 
-class ClassGenerator {
+class ClassGenerator
+{
 
-	private function handleBody( Generator\ClassGenerator $class, PHPClass $type ) {
+	private function handleBody(Generator\ClassGenerator $class, PHPClass $type )
+    {
 		foreach ( $type->getConstants() as $const ) {
 			$this->handleConstant( $class, $const );
 		}
@@ -46,7 +48,8 @@ class ClassGenerator {
 		return true;
 	}
 
-	private function isNativeType( PHPClass $class ) {
+	private function isNativeType(PHPClass $class )
+    {
 		return ! $class->getNamespace() && in_array(
 			$class->getName(),
 			[
@@ -62,7 +65,8 @@ class ClassGenerator {
 		);
 	}
 
-	private function getPhpType( PHPClass $class ) {
+	private function getPhpType(PHPClass $class )
+    {
 		if ( ! $class->getNamespace() ) {
 			if ( $this->isNativeType( $class ) ) {
 				return $class->getName();
@@ -155,7 +159,8 @@ class ClassGenerator {
 		$generator->addMethodFromGenerator( $method );
 	}
 
-	private function handleSetter( Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class ) {
+	private function handleSetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class )
+    {
 		$methodBody = '';
 		$docblock   = new DocBlockGenerator();
 
@@ -223,7 +228,8 @@ class ClassGenerator {
 		$generator->addMethodFromGenerator( $method );
 	}
 
-	private function handleGetter( Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class ) {
+	private function handleGetter(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class )
+    {
 
 		if ( $prop->getType() instanceof PHPClassOf ) {
 			$docblock = new DocBlockGenerator();
@@ -303,7 +309,8 @@ class ClassGenerator {
 		$generator->addMethodFromGenerator( $method );
 	}
 
-	private function isOneType( PHPClass $type, $onlyParent = false ) {
+	private function isOneType(PHPClass $type, $onlyParent = false )
+    {
 		if ( $onlyParent ) {
 			$e = $type->getExtends();
 			if ( $e ) {
@@ -318,7 +325,8 @@ class ClassGenerator {
 		}
 	}
 
-	private function handleAdder( Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class ) {
+	private function handleAdder(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class )
+    {
 		$type     = $prop->getType();
 		$propName = $type->getArg()
 		                 ->getName();
@@ -372,7 +380,8 @@ class ClassGenerator {
 		$generator->addMethodFromGenerator( $method );
 	}
 
-	private function handleMethod( Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class ) {
+	private function handleMethod(Generator\ClassGenerator $generator, PHPProperty $prop, PHPClass $class )
+    {
 		if ( $prop->getType() instanceof PHPClassOf ) {
 			$this->handleAdder( $generator, $prop, $class );
 		}
@@ -381,7 +390,8 @@ class ClassGenerator {
 		$this->handleSetter( $generator, $prop, $class );
 	}
 
-	private function handleProperty( Generator\ClassGenerator $class, PHPProperty $prop ) {
+	private function handleProperty(Generator\ClassGenerator $class, PHPProperty $prop )
+    {
 		$generatedProp = new PropertyGenerator( $prop->getName() );
 		$generatedProp->setVisibility( PropertyGenerator::VISIBILITY_PRIVATE );
 
@@ -426,11 +436,13 @@ class ClassGenerator {
 		$docBlock->setTag( $tag );
 	}
 
-	private function handleConstant( Generator\ClassGenerator $class, PhpConstant $const ) {
+	private function handleConstant(Generator\ClassGenerator $class, PhpConstant $const )
+    {
 		$class->addConstant( $const->getName(), $const->getValue() );
 	}
 
-	public function generate( Generator\ClassGenerator $class, PHPClass $type ) {
+	public function generate(Generator\ClassGenerator $class, PHPClass $type )
+    {
 		$docblock = new DocBlockGenerator( "Class representing " . $type->getName() );
 		if ( $type->getDoc() ) {
 			$docblock->setLongDescription( $type->getDoc() );
