@@ -240,14 +240,16 @@ class PHPClass
         return $this;
     }
 
-    public function addConstant( $constantName, $constantValue ) {
-        $this->constants[] = new PhpConstant( $constantName, $constantValue );
+    public function addConstant($constantName, $constantValue)
+    {
+        $this->constants[] = new PhpConstant($constantName, $constantValue);
     }
 
     /**
      * @return PHPConstant[]
      */
-    public function getConstants() {
+    public function getConstants()
+    {
         return $this->constants;
     }
 }
