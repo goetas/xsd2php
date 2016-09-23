@@ -517,8 +517,8 @@ class PhpConverter extends AbstractConverter
 			$constantName = $constantName . '_';
 		}
 
-		if (is_numeric($constantName)) {
-		    $constantName = 'NUM_' . $constantName;
+        if (is_numeric($constantName)) {
+            $constantName = 'NUM_' . $constantName;
         }
 
         if ($constantName === '') {
