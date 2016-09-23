@@ -516,6 +516,15 @@ class PhpConverter extends AbstractConverter
 		if ( in_array( $constantName, $keywords ) ) {
 			$constantName = $constantName . '_';
 		}
+
+		if (is_numeric($constantName)) {
+		    $constantName = 'NUM_' . $constantName;
+        }
+
+        if ($constantName === '') {
+            $constantName = 'EMPTY_STRING';
+        }
+
 		$constantName = strtoupper( $constantName );
 
 		return $constantName;
