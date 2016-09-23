@@ -57,7 +57,7 @@ class ClassGenerator
             'boolean',
             'array',
             'mixed',
-            'callable',
+            'callable'
         ]);
     }
 
@@ -67,10 +67,8 @@ class ClassGenerator
             if ($this->isNativeType($class)) {
                 return $class->getName();
             }
-
             return "\\" . $class->getName();
         }
-
         return "\\" . $class->getFullName();
     }
 
@@ -441,5 +439,4 @@ class ClassGenerator
             return true;
         }
     }
-
 }
