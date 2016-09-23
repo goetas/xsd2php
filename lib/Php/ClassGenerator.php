@@ -49,19 +49,16 @@ class ClassGenerator
 
     private function isNativeType(PHPClass $class)
     {
-        return !$class->getNamespace() && in_array(
-            $class->getName(),
-            [
-                'string',
-                'int',
-                'float',
-                'integer',
-                'boolean',
-                'array',
-                'mixed',
-                'callable',
-            ]
-        );
+        return !$class->getNamespace() && in_array($class->getName(), [
+            'string',
+            'int',
+            'float',
+            'integer',
+            'boolean',
+            'array',
+            'mixed',
+            'callable',
+        ]);
     }
 
     private function getPhpType(PHPClass $class)
@@ -92,7 +89,7 @@ class ClassGenerator
             $param->setType($this->getPhpType($type));
         }
         $method = new MethodGenerator("__construct", [
-            $param,
+            $param
         ]);
         $method->setDocBlock($docblock);
         $method->setBody("\$this->value(\$value);");
@@ -173,8 +170,7 @@ class ClassGenerator
             $parameter->setType("array");
 
             if ($p = $this->isOneType($type->getArg()
-                ->getType()
-            )
+                ->getType())
             ) {
                 if (($t = $p->getType())) {
                     $patramTag->setTypes($this->getPhpType($t));
@@ -432,8 +428,7 @@ class ClassGenerator
                 if ($extends->getNamespace() != $type->getNamespace()) {
                     if ($extends->getName() == $type->getName()) {
                         $class->addUse($type->getExtends()
-                            ->getFullName(), $extends->getName() . "Base"
-                        );
+                            ->getFullName(), $extends->getName() . "Base");
                         $class->setExtendedClass($extends->getName() . "Base");
                     } else {
                         $class->addUse($extends->getFullName());
