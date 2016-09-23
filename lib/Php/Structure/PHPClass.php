@@ -229,6 +229,11 @@ class PHPClass
         return $this;
     }
 
+    public function getAbstract()
+    {
+        return $this->abstract;
+    }
+
     public function setAbstract($abstract)
     {
         $this->abstract = (boolean)$abstract;
