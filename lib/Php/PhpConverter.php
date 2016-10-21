@@ -521,6 +521,10 @@ class PhpConverter extends AbstractConverter
             $constantName = 'NUM_' . $constantName;
         }
 
+        if (is_numeric(substr($constantName, 0, 1))) {
+            $constantName = '_' . $constantName;
+        }
+
         if ($constantName === '') {
             $constantName = 'EMPTY_STRING';
         }
@@ -529,5 +533,5 @@ class PhpConverter extends AbstractConverter
 
 		return $constantName;
 	}
-    
+
 }
