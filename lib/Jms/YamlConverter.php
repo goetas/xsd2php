@@ -263,6 +263,11 @@ class YamlConverter extends AbstractConverter
             if ($parent instanceof Type) {
                 $this->handleClassExtension($class, $data, $parent, $name);
             }
+
+            $checks = $restriction->getChecks();
+            if (count($checks) && isset($checks['enumeration'])) {
+                $data['properties']['__value']['xml_element'] = ['cdata' => false];
+            }
         } elseif ($unions = $type->getUnions()) {
             foreach ($unions as $i => $unon) {
                 $this->handleClassExtension($class, $data, $unon, $name . $i);
