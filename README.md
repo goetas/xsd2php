@@ -215,10 +215,10 @@ An XSD for instance with a type named `User`, a type named `UserType`, a root el
 * If you want to be safe, use the `--naming-strategy=long` option.
 
 
+## Note 
 
-Note
-----
-
-I'm sorry for the terrible written english within the documentation, I'm trying to improve it.
-Pull Requests are welcome.
-
+The code in this project is provided under the 
+[MIT](https://opensource.org/licenses/MIT) license. 
+For professional support 
+contact [goetas@gmail.com](mailto:goetas@gmail.com) 
+or visit [https://www.goetas.com](https://www.goetas.com)
