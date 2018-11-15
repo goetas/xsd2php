@@ -1,6 +1,8 @@
 <?php
 namespace Goetas\Xsd\XsdToPhp\Php;
 
+use Cocur\Slugify\Slugify;
+use Doctrine\Common\Inflector\Inflector;
 use Exception;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
 use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
@@ -220,6 +222,10 @@ class PhpConverter extends AbstractConverter
 
             $this->visitTypeBase($class, $type);
 
+            if ( ( $restriction = $type->getRestriction() ) && $restriction->getChecksByType( 'enumeration' ) ) {
+                return $class;
+            }
+
             if ($type instanceof SimpleType) {
                 $this->classes[spl_object_hash($type)]["skip"] = true;
                 return $class;
@@ -286,7 +292,14 @@ class PhpConverter extends AbstractConverter
 
             foreach ($restriction->getChecks() as $typeCheck => $checks) {
                 foreach ($checks as $check) {
-                    $class->addCheck('__value', $typeCheck, $check);
+                    if ( $typeCheck === 'enumeration' ) {
+                        $class->addConstant(
+                            $this->createConstantNameFromValue( $check[ 'value' ] ),
+                            $check[ 'value' ]
+                        );
+                    } else {
+                        $class->addCheck( '__value', $typeCheck, $check );
+                    }
                 }
             }
         } elseif ($unions = $type->getUnions()) {
@@ -425,4 +438,100 @@ class PhpConverter extends AbstractConverter
             return $this->visitType($node->getType(), $force);
         }
     }
+	/**
+	 * @param $constantValue
+	 *
+	 * @return string
+	 */
+	public function createConstantNameFromValue( $constantValue ) {
+		static $keywords = [
+			'abstract',
+			'and',
+			'array',
+			'as',
+			'break',
+			'callable',
+			'case',
+			'catch',
+			'class',
+			'clone',
+			'const',
+			'continue',
+			'declare',
+			'default',
+			'die',
+			'do',
+			'echo',
+			'else',
+			'elseif',
+			'empty',
+			'enddeclare',
+			'endfor',
+			'endforeach',
+			'endif',
+			'endswitch',
+			'endwhile',
+			'eval',
+			'exit',
+			'extends',
+			'final',
+			'for',
+			'foreach',
+			'function',
+			'global',
+			'goto',
+			'if',
+			'implements',
+			'include',
+			'include_once',
+			'instanceof',
+			'insteadof',
+			'interface',
+			'isset',
+			'list',
+			'namespace',
+			'new',
+			'or',
+			'print',
+			'private',
+			'protected',
+			'public',
+			'require',
+			'require_once',
+			'return',
+			'static',
+			'switch',
+			'throw',
+			'trait',
+			'try',
+			'unset',
+			'use',
+			'var',
+			'while',
+			'xor',
+		];
+
+		$slugify      = new Slugify();
+		$constantName = $slugify->slugify( $constantValue, '_' );
+		if ( in_array( $constantName, $keywords ) ) {
+			$constantName = $constantName . '_';
+		}
+
+        if (is_numeric($constantName)) {
+            $constantName = 'NUM_' . $constantName;
+        }
+
+        if (is_numeric(substr($constantName, 0, 1))) {
+            $constantName = '_' . $constantName;
+        }
+
+        if ($constantName === '') {
+            $constantName = 'EMPTY_STRING';
+        }
+
+		$constantName = strtoupper( $constantName );
+
+		return $constantName;
+	}
+
 }

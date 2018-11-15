@@ -4,6 +4,7 @@ namespace Goetas\Xsd\XsdToPhp\Php;
 use Doctrine\Common\Inflector\Inflector;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClass;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPClassOf;
+use Goetas\Xsd\XsdToPhp\Php\Structure\PhpConstant;
 use Goetas\Xsd\XsdToPhp\Php\Structure\PHPProperty;
 use Zend\Code\Generator;
 use Zend\Code\Generator\DocBlock\Tag\ParamTag;
@@ -19,6 +20,10 @@ class ClassGenerator
 
     private function handleBody(Generator\ClassGenerator $class, PHPClass $type)
     {
+        foreach ($type->getConstants() as $const) {
+            $this->handleConstant($class, $const);
+        }
+
         foreach ($type->getProperties() as $prop) {
             if ($prop->getName() !== '__value') {
                 $this->handleProperty($class, $prop);
@@ -31,7 +36,12 @@ class ClassGenerator
         }
 
         if (count($type->getProperties()) === 1 && $type->hasProperty('__value')) {
-            return false;
+            if (!count($type->getConstants())) {
+                return false;
+            }
+            $class->removeMethod('__construct')
+                ->removeMethod('__toString')
+                ->removeMethod('value');
         }
 
         return true;
@@ -150,7 +160,7 @@ class ClassGenerator
 
         $method = new MethodGenerator("set" . Inflector::classify($prop->getName()));
 
-        $parameter = new ParameterGenerator($prop->getName(), "mixed");
+        $parameter = new ParameterGenerator($prop->getName(), "mixed", new Generator\ValueGenerator(null, Generator\ValueGenerator::TYPE_NULL));
 
         if ($type && $type instanceof PHPClassOf) {
             $patramTag->setTypes($this->getPhpType($type->getArg()
@@ -389,13 +399,18 @@ class ClassGenerator
         $docBlock->setTag($tag);
     }
 
+    private function handleConstant(Generator\ClassGenerator $class, PhpConstant $const)
+    {
+        $class->addConstant($const->getName(), $const->getValue());
+    }
+
     public function generate(Generator\ClassGenerator $class, PHPClass $type)
     {
         $docblock = new DocBlockGenerator("Class representing " . $type->getName());
         if ($type->getDoc()) {
             $docblock->setLongDescription($type->getDoc());
         }
-        $class->setNamespaceName($type->getNamespace() ?: NULL);
+        $class->setNamespaceName($type->getNamespace());
         $class->setName($type->getName());
         $class->setDocblock($docblock);
 
