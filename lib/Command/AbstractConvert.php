@@ -3,9 +3,7 @@ namespace Goetas\Xsd\XsdToPhp\Command;
 
 use Exception;
 use Goetas\Xsd\XsdToPhp\AbstractConverter;
-use Goetas\Xsd\XsdToPhp\Naming\LongNamingStrategy;
-use Goetas\Xsd\XsdToPhp\Naming\NamingStrategy;
-use Goetas\Xsd\XsdToPhp\Naming\ShortNamingStrategy;
+use Goetas\Xsd\XsdToPhp\Naming;
 use GoetasWebservices\XML\XSDReader\SchemaReader;
 use Symfony\Component\Console;
 use Symfony\Component\Console\Input\InputArgument;
@@ -32,7 +30,7 @@ abstract class AbstractConvert extends Console\Command\Command
 
     /**
      */
-    protected abstract function getConverterter(NamingStrategy $naming);
+    protected abstract function getConverterter(Naming\NamingStrategy $naming);
 
     /**
      *
@@ -53,9 +51,13 @@ abstract class AbstractConvert extends Console\Command\Command
         }
 
         if ($input->getOption('naming-strategy') == 'short') {
-            $naming = new ShortNamingStrategy();
+            $naming = new Naming\ShortNamingStrategy();
         } elseif ($input->getOption('naming-strategy') == 'long') {
-            $naming = new LongNamingStrategy();
+            $naming = new Naming\LongNamingStrategy();
+        } elseif ($input->getOption('naming-strategy') == 'short-accurate-props') {
+            $naming = new Naming\ShortAccuratePropsNamingStrategy();
+        } elseif ($input->getOption('naming-strategy') == 'long-accurate-props') {
+            $naming = new Naming\LongAccuratePropsNamingStrategy();
         } else {
             throw new \InvalidArgumentException("Unsupported naming strategy");
         }
